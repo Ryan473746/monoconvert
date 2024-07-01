@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Converti Immagini in Bianco e Nero</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', sans-serif;
+            background-color: #2c3e50;
+            color: #ecf0f1;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            color: #ecf0f1;
+            font-size: 36px;
+            margin-bottom: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #34495e;
+            padding: 30px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            text-align: center;
+        }
+        input[type="file"] {
+            margin-bottom: 20px;
+            font-size: 16px;
+            padding: 10px;
+            background: #ecf0f1;
+            color: #2c3e50;
+            border: none;
+            border-radius: 5px;
+        }
+        .image-preview {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        .image-preview img {
+            max-width: 100%;
+            max-height: 300px;
+            border: 2px solid #ecf0f1;
+            border-radius: 10px;
+        }
+        .convert-btn, .download-btn {
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 18px;
+            cursor: pointer;
+            border-radius: 5px;
+            margin: 20px 10px;
+            transition: background 0.3s;
+        }
+        .convert-btn:hover, .download-btn:hover {
+            background-color: #c0392b;
+        }
+        .description {
+            margin-top: 40px;
+            font-size: 18px;
+            color: #bdc3c7;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Converti Immagini in Bianco e Nero</h1>
+        <input type="file" id="image-input" multiple accept="image/*">
+        <button class="convert-btn" onclick="convertImages()">Converti in Bianco e Nero</button>
+        <div class="image-preview" id="image-preview"></div>
+        <p class="description">Questo sito è in grado di convertire una o più immagini in bianco e nero semplicemente con un click!</p>
+    </div>
+
+    <script>
+        function convertToGrayscale(image) {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = image.width;
+            canvas.height = image.height;
+            ctx.drawImage(image, 0, 0, image.width, image.height);
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const data = imageData.data;
+
+            for (let i = 0; i < data.length; i += 4) {
+                const avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
+                data[i] = avg;
+                data[i + 1] = avg;
+                data[i + 2] = avg;
+            }
+            ctx.putImageData(imageData, 0, 0);
+            return canvas.toDataURL();
+        }
+
+        function handleFiles(files) {
+            const preview = document.getElementById('image-preview');
+            preview.innerHTML = '';
+            for (const file of files) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const img = new Image();
+                    img.onload = function() {
+                        const container = document.createElement('div');
+                        container.style.position = 'relative';
+                        const downloadBtn = document.createElement('button');
+                        downloadBtn.textContent = 'Scarica';
+                        downloadBtn.classList.add('download-btn');
+                        downloadBtn.style.position = 'absolute';
+                        downloadBtn.style.top = '10px';
+                        downloadBtn.style.right = '10px';
+                        downloadBtn.onclick = function() {
+                            const link = document.createElement('a');
+                            link.href = img.src;
+                            link.download = 'image_bw.png';
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
+                        };
+                        container.appendChild(img);
+                        container.appendChild(downloadBtn);
+                        preview.appendChild(container);
+                    }
+                    img.src = event.target.result;
+                }
+                reader.readAsDataURL(file);
+            }
+        }
+
+        document.getElementById('image-input').addEventListener('change', function() {
+            handleFiles(this.files);
+        });
+
+        function convertImages() {
+            const preview = document.getElementById('image-preview');
+            const images = preview.getElementsByTagName('img');
+            for (const img of images) {
+                img.src = convertToGrayscale(img);
+            }
+        }
+    </script>
+</body>
+</html>
+
